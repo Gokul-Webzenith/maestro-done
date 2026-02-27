@@ -10,21 +10,16 @@ import {handle} from "@hono/node-server/vercel"
 import { describeRoute, openAPIRouteHandler, validator } from "hono-openapi";
 import { z } from "zod";
 import { auth } from "./../auth.js";
-const db = (() => {
-	try {
-		const conn = getDb();
-		console.log("Database connected successfully");
-		return conn;
-	} catch (error: unknown) {
-		console.error("Database connection failed:", error);
 
-		if (error instanceof Error) {
-			throw new Error(`Database connection failed: ${error.message}`);
-		}
+let db: ReturnType<typeof getDb>;
 
-		throw new Error("Database connection failed: Unknown error");
-	}
-})();
+function getDatabase() {
+  if (!db) {
+    db = getDb();
+    console.log("Database connected");
+  }
+  return db;
+}
 interface Variables {
 	userId: string;
 }
@@ -76,13 +71,6 @@ app.use("*", async (c, next) => {
 	await next();
 });
 
-app.get("/admin/user-count", async (c) => {
-	const result = await db.select({ count: sql<number>`count(*)` }).from(user);
-
-	return c.json({ totalUsers: result[0].count });
-});
-
-/* ================= TODOS ================= */
 
 /* -------- GET TODOS -------- */
 
@@ -97,6 +85,7 @@ app.get(
 	}),
 
 	async (c) => {
+		const db = getDatabase();
 		const userId = c.get("userId");
 
 		const data = await db.select().from(todos).where(eq(todos.userId, userId));
@@ -124,6 +113,7 @@ app.post(
 	}),
 
 	async (c) => {
+		const db = getDatabase();
 		const userId = c.get("userId");
 		const body = c.req.valid("json");
 
@@ -156,6 +146,7 @@ app.put(
 	validator("json", todoFormSchema),
 
 	async (c) => {
+		const db = getDatabase();
 		const { id } = c.req.valid("param");
 		const body = c.req.valid("json");
 		const userId = c.get("userId");
@@ -205,6 +196,7 @@ app.patch(
 	}),
 
 	async (c) => {
+		const db = getDatabase();
 		const { id } = c.req.valid("param");
 		const body = c.req.valid("json");
 		const userId = c.get("userId");
@@ -231,6 +223,7 @@ app.delete(
 	validator("param", z.object({ id: z.string() })),
 
 	async (c) => {
+		const db = getDatabase();
 		const { id } = c.req.valid("param");
 		const userId = c.get("userId");
 
