@@ -8,7 +8,7 @@ export default defineConfig({
 
 	platform: "node", // 🔴 THIS IS IMPORTANT
 
-	outDir: ".",
+	outDir: "dist",
 	clean: true,
 
 	splitting: false,
