@@ -6,10 +6,10 @@ import { and, eq, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
+import {handle} from "@hono/node-server/vercel"
 import { describeRoute, openAPIRouteHandler, validator } from "hono-openapi";
 import { z } from "zod";
 import { auth } from "./../auth.js";
-
 const db = (() => {
 	try {
 		const conn = getDb();
@@ -274,11 +274,6 @@ app.get(
 		url: "/api/openapi",
 	})
 );
-// 👇 IMPORTANT PART
-serve({
-	fetch: app.fetch,
-	port: 3000,
-	hostname: "0.0.0.0", // <-- allow network access
-});
 
-console.log("Server running on http://0.0.0.0:3000");
+
+export default handle (app);

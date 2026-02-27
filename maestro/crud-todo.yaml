@@ -82,6 +82,11 @@ appId: com.anonymous.coolapp
 - tapOn:
     text: "OK"
 
+- runFlow:
+    when:
+      visible: "Open debugger to view warnings"
+    commands:
+      - tapOn: "✕"
 - tapOn:
     id: submit-btn
 

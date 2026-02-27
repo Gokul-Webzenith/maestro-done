@@ -131,7 +131,15 @@ export default function WorkScreen() {
 
 	const openAdd = () => {
 		clearEditTodo();
-		reset();
+				reset({
+			text: "",
+			description: "",
+			status: "todo",
+			startDate: "",
+			startTime: "",
+			endDate: "",
+			endTime: "",
+		});
 		openSheet();
 	};
 	const getRemainingClass = (endAt: string, status: string) => {
@@ -158,23 +166,25 @@ export default function WorkScreen() {
 	};
 
 	const openEdit = (item: Todo) => {
-		setEditTodo(item);
+  setEditTodo(item);
 
-		reset({
-			text: item.text,
-			description: item.description,
-			status: item.status,
+  const start = new Date(item.startAt);
+  const end = new Date(item.endAt);
 
-			startDate: item.startAt.split("T")[0],
-			startTime: item.startAt.split("T")[1].slice(0, 5),
+  reset({
+    text: item.text,
+    description: item.description,
+    status: item.status,
 
-			endDate: item.endAt.split("T")[0],
-			endTime: item.endAt.split("T")[1].slice(0, 5),
-		});
+    startDate: start.toISOString().split("T")[0],
+    startTime: start.toTimeString().slice(0, 5),
 
-		openSheet();
-	};
+    endDate: end.toISOString().split("T")[0],
+    endTime: end.toTimeString().slice(0, 5),
+  });
 
+  openSheet();
+};
 	const onSubmit = (data: TodoForm) => {
 		openConfirm(editTodo ? "edit" : "add", data);
 	};
@@ -187,6 +197,7 @@ export default function WorkScreen() {
 				},
 				body: data,
 			});
+			 clearEditTodo(); 
 		} else {
 			addMutation.mutate({
 				body: data,
@@ -214,19 +225,19 @@ export default function WorkScreen() {
 		closeConfirm();
 	};
 
-	const formatDateTime = (iso: string) => {
-		const d = new Date(iso);
+const formatDateTime = (iso: string) => {
+  const d = new Date(iso);
 
-		return d.toLocaleString("en-IN", {
-			day: "2-digit",
-			month: "short",
-			year: "numeric",
-			hour: "2-digit",
-			minute: "2-digit",
-			hour12: true,
-		});
-	};
-
+  return d.toLocaleString("en-IN", {
+    timeZone: "Asia/Kolkata",
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+};
 	return (
 		<SafeAreaView className="flex-1 bg-gray-100">
 			<View className="flex-1 p-4">
