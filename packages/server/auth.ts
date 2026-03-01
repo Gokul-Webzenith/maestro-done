@@ -46,9 +46,11 @@ export const auth = betterAuth({
 	},
 
 	advanced: {
+		crossOriginCookies: true,
 		defaultCookieAttributes: {
 			sameSite: "none",
 			secure: true,
+			httpOnly: true,
 			partitioned: true, // 🔥 THIS IS MISSING
 		},
 	},
