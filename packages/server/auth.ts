@@ -1,9 +1,3 @@
-import dotenv from "dotenv";
-
-dotenv.config({
-	path: "../../.env",
-});
-
 import { expo } from "@better-auth/expo";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";

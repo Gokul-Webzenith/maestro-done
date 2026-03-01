@@ -2,7 +2,6 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import pkg from "pg";
 
 const { Pool } = pkg;
-import "dotenv/config";
 
 let pool: pkg.Pool | null = null;
 let db: ReturnType<typeof drizzle> | null = null;
