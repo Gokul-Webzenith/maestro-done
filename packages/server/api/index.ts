@@ -58,28 +58,28 @@ app.all("/auth/*", async (c) => {
 
 /* ================= AUTH MIDDLEWARE ================= */
 
-app.use("*", async (c, next) => {
-	const path = c.req.path;
+// app.use("*", async (c, next) => {
+// 	const path = c.req.path;
 
-	if (path.startsWith("/auth") || path === "/openapi" || path === "/docs") {
-		return next();
-	}
+// 	if (path.startsWith("/auth") || path === "/openapi" || path === "/docs") {
+// 		return next();
+// 	}
 
-	const headers = new Headers();
-	c.req.raw.headers.forEach((value, key) => {
-		headers.set(key, value);
-	});
+// 	const headers = new Headers();
+// 	c.req.raw.headers.forEach((value, key) => {
+// 		headers.set(key, value);
+// 	});
 
-	const session = await auth.api.getSession({ headers });
+// 	const session = await auth.api.getSession({ headers });
 
-	if (!session?.user) {
-		return c.json({ message: "Login required" }, 401);
-	}
+// 	if (!session?.user) {
+// 		return c.json({ message: "Login required" }, 401);
+// 	}
 
-	c.set("userId", session.user.id);
+// 	c.set("userId", session.user.id);
 
-	await next();
-});
+// 	await next();
+// });
 
 app.get("/test-db", async (c) => {
 	const db = getDatabase();
