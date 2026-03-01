@@ -1,14 +1,18 @@
-// ...existing code...
 /** @type {import('next').NextConfig} */
 const nextConfig = {
 	reactStrictMode: true,
 
-	// transpile packages that ship TS/ESM source in node_modules
+	// ✅ Add your workspace packages here
 	transpilePackages: [
 		"expo-modules-core",
 		"expo-secure-store",
 		"expo",
 		"react-native",
+
+		// 🔥 ADD THESE
+		"@repo/schemas",
+		"@repo/store",
+		"@workspace/ui",
 	],
 
 	async rewrites() {
@@ -30,4 +34,3 @@ const nextConfig = {
 };
 
 export default nextConfig;
-// ...existing code...
