@@ -51,9 +51,8 @@ app.options("*", (c) => c.body(null, 204));
 
 /* ================= AUTH ROUTES (FIXED) ================= */
 
-app.all("/auth/*", async (c) => {
-	const response = await auth.handler(c.req.raw);
-	return response;
+app.all("/auth/*", (c) => {
+	return auth.handler(c.req.raw);
 });
 
 /* ================= AUTH MIDDLEWARE ================= */
@@ -65,19 +64,27 @@ app.use("*", async (c, next) => {
 		return next();
 	}
 
-	const headers = new Headers();
-	c.req.raw.headers.forEach((value, key) => {
-		headers.set(key, value);
+	let session = await auth.api.getSession({
+		headers: c.req.raw.headers,
 	});
 
-	const session = await auth.api.getSession({ headers });
-
+	// 2️⃣ If no cookie session, try Bearer token (Mobile)
 	if (!session?.user) {
-		return c.json({ message: "Login required" }, 401);
+		const authHeader = c.req.header("Authorization");
+		if (authHeader?.startsWith("Bearer ")) {
+			const token = authHeader.replace("Bearer ", "");
+			session = await auth.api.getSession({
+				headers: new Headers({
+					Authorization: `Bearer ${token}`,
+				}),
+			});
+		}
 	}
 
+	if (!session?.user) {
+		return c.json({ message: "Unauthorized" }, 401);
+	}
 	c.set("userId", session.user.id);
-
 	await next();
 });
 
