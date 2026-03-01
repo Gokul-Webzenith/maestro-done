@@ -81,7 +81,11 @@ app.use("*", async (c, next) => {
 	await next();
 });
 
-/* ================= GET TODOS ================= */
+app.get("/test-db", async (c) => {
+	const db = getDatabase();
+	await db.select().from(todos).limit(1);
+	return c.json({ ok: true });
+});
 
 app.get("/", async (c) => {
 	const db = getDatabase();
