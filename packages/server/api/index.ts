@@ -13,257 +13,217 @@ import { auth } from "../auth.js";
 let db: ReturnType<typeof getDb>;
 
 function getDatabase() {
-	if (!db) {
-		db = getDb();
-		console.log("Database connected");
-	}
-	return db;
+  if (!db) {
+    db = getDb();
+    console.log("Database connected");
+  }
+  return db;
 }
+
 interface Variables {
-	userId: string;
+  userId: string;
 }
 
 const app = new Hono<{ Variables: Variables }>().basePath("/api");
 
 app.use("*", logger());
 
+/* ================= CORS (FIXED) ================= */
+
 app.use(
-	"*",
-	cors({
-		origin: [
-			"http://localhost:3000",
-			"http://localhost:3001",
-			"http://localhost:5173",
-			"http://192.168.1.18:3000",
-		],
-		credentials: true,
-		allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-		allowHeaders: ["Content-Type", "Authorization"],
-	})
+  "*",
+  cors({
+    origin: [
+      "http://localhost:3000",
+      "http://localhost:3001",
+      "http://localhost:5173",
+      "http://192.168.1.18:3000",
+      "https://maestro-frontned-web.vercel.app", // ✅ PRODUCTION FRONTEND
+    ],
+    credentials: true,
+    allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowHeaders: ["Content-Type", "Authorization"],
+  })
 );
 
 app.options("*", (c) => c.body(null, 204));
 
-app.all("/auth/*", (c) => auth.handler(c.req.raw));
+/* ================= AUTH ROUTES (FIXED) ================= */
 
-app.use("*", async (c, next) => {
-	const path = c.req.path;
-
-	if (path.startsWith("/auth") || path === "/openapi" || path === "/docs") {
-		return next();
-	}
-	const headers = new Headers();
-	c.req.raw.headers.forEach((value, key) => {
-		headers.set(key, value);
-	});
-
-	const session = await auth.api.getSession({
-		headers,
-	});
-
-	if (!session?.user) {
-		return c.json({ message: "Login required" }, 401);
-	}
-
-	c.set("userId", session.user.id);
-
-	await next();
+app.all("/auth/*", async (c) => {
+  const response = await auth.handler(c.req.raw);
+  return response; // ✅ MUST RETURN
 });
 
-/* -------- GET TODOS -------- */
+/* ================= AUTH MIDDLEWARE ================= */
 
-app.get(
-	"/",
+app.use("*", async (c, next) => {
+  const path = c.req.path;
 
-	describeRoute({
-		description: "Get user todos",
-		responses: {
-			200: { description: "Todos list" },
-		},
-	}),
+  if (path.startsWith("/auth") || path === "/openapi" || path === "/docs") {
+    return next();
+  }
 
-	async (c) => {
-		const db = getDatabase();
-		const userId = c.get("userId");
+  const headers = new Headers();
+  c.req.raw.headers.forEach((value, key) => {
+    headers.set(key, value);
+  });
 
-		const data = await db.select().from(todos).where(eq(todos.userId, userId));
+  const session = await auth.api.getSession({ headers });
 
-		return c.json(data);
-	}
-);
+  if (!session?.user) {
+    return c.json({ message: "Login required" }, 401);
+  }
+
+  c.set("userId", session.user.id);
+
+  await next();
+});
+
+/* ================= GET TODOS ================= */
+
+app.get("/", async (c) => {
+  const db = getDatabase();
+  const userId = c.get("userId");
+
+  const data = await db
+    .select()
+    .from(todos)
+    .where(eq(todos.userId, userId));
+
+  return c.json(data);
+});
+
+/* ================= CREATE TODO ================= */
 
 app.post(
-	"/",
+  "/",
+  validator("json", todoFormSchema),
+  async (c) => {
+    const db = getDatabase();
+    const userId = c.get("userId");
+    const body = c.req.valid("json");
 
-	describeRoute({
-		description: "Create todo",
-		responses: {
-			201: { description: "Created" },
-			400: { description: "Validation error" },
-		},
-	}),
+    const startAt = new Date(`${body.startDate}T${body.startTime}`);
+    const endAt = new Date(`${body.endDate}T${body.endTime}`);
 
-	validator("json", todoFormSchema, (result, c) => {
-		if (!result.success) {
-			return c.json(result.error, 400);
-		}
-		return;
-	}),
+    const [todo] = await db
+      .insert(todos)
+      .values({
+        text: body.text,
+        description: body.description,
+        status: body.status,
+        startAt,
+        endAt,
+        userId,
+      })
+      .returning();
 
-	async (c) => {
-		const db = getDatabase();
-		const userId = c.get("userId");
-		const body = c.req.valid("json");
-
-		const startAt = new Date(`${body.startDate}T${body.startTime}`);
-
-		const endAt = new Date(`${body.endDate}T${body.endTime}`);
-
-		const [todo] = await db
-			.insert(todos)
-			.values({
-				text: body.text,
-				description: body.description,
-				status: body.status,
-				startAt,
-				endAt,
-				userId,
-			})
-			.returning();
-
-		return c.json({ success: true, data: todo }, 201);
-	}
+    return c.json({ success: true, data: todo }, 201);
+  }
 );
 
-/* -------- UPDATE TODO -------- */
+/* ================= UPDATE TODO ================= */
 
 app.put(
-	"/:id",
+  "/:id",
+  validator("param", z.object({ id: z.string() })),
+  validator("json", todoFormSchema),
+  async (c) => {
+    const db = getDatabase();
+    const { id } = c.req.valid("param");
+    const body = c.req.valid("json");
+    const userId = c.get("userId");
 
-	validator("param", z.object({ id: z.string() })),
-	validator("json", todoFormSchema),
+    const startAt = new Date(`${body.startDate}T${body.startTime}`);
+    const endAt = new Date(`${body.endDate}T${body.endTime}`);
 
-	async (c) => {
-		const db = getDatabase();
-		const { id } = c.req.valid("param");
-		const body = c.req.valid("json");
-		const userId = c.get("userId");
+    const [todo] = await db
+      .update(todos)
+      .set({ ...body, startAt, endAt })
+      .where(and(eq(todos.id, Number(id)), eq(todos.userId, userId)))
+      .returning();
 
-		const startAt = new Date(`${body.startDate}T${body.startTime}`);
+    if (!todo) {
+      return c.json({ message: "Not found" }, 404);
+    }
 
-		const endAt = new Date(`${body.endDate}T${body.endTime}`);
-
-		const [todo] = await db
-			.update(todos)
-			.set({
-				...body,
-				startAt,
-				endAt,
-			})
-			.where(and(eq(todos.id, Number(id)), eq(todos.userId, userId)))
-			.returning();
-
-		if (!todo) {
-			return c.json({ message: "Not found" }, 404);
-		}
-
-		return c.json({ success: true, data: todo });
-	}
+    return c.json({ success: true, data: todo });
+  }
 );
 
-/* -------- PATCH TODO -------- */
+/* ================= PATCH TODO ================= */
 
 app.patch(
-	"/:id",
+  "/:id",
+  validator("param", z.object({ id: z.string() })),
+  validator("json", patchTodoSchema),
+  async (c) => {
+    const db = getDatabase();
+    const { id } = c.req.valid("param");
+    const body = c.req.valid("json");
+    const userId = c.get("userId");
 
-	describeRoute({
-		description: "Patch todo",
-		responses: {
-			200: { description: "Updated" },
-			404: { description: "Not found" },
-		},
-	}),
+    const [todo] = await db
+      .update(todos)
+      .set(body)
+      .where(and(eq(todos.id, Number(id)), eq(todos.userId, userId)))
+      .returning();
 
-	validator("param", z.object({ id: z.string() })),
+    if (!todo) {
+      return c.json({ message: "Not found" }, 404);
+    }
 
-	validator("json", patchTodoSchema, (result, c) => {
-		if (!result.success) {
-			return c.json(result.error, 400);
-		}
-		return;
-	}),
-
-	async (c) => {
-		const db = getDatabase();
-		const { id } = c.req.valid("param");
-		const body = c.req.valid("json");
-		const userId = c.get("userId");
-
-		const [todo] = await db
-			.update(todos)
-			.set(body)
-			.where(and(eq(todos.id, Number(id)), eq(todos.userId, userId)))
-			.returning();
-
-		if (!todo) {
-			return c.json({ message: "Not found" }, 404);
-		}
-
-		return c.json({ success: true, data: todo });
-	}
+    return c.json({ success: true, data: todo });
+  }
 );
 
-/* -------- DELETE TODO -------- */
+/* ================= DELETE TODO ================= */
 
 app.delete(
-	"/:id",
+  "/:id",
+  validator("param", z.object({ id: z.string() })),
+  async (c) => {
+    const db = getDatabase();
+    const { id } = c.req.valid("param");
+    const userId = c.get("userId");
 
-	validator("param", z.object({ id: z.string() })),
+    const result = await db
+      .delete(todos)
+      .where(and(eq(todos.id, Number(id)), eq(todos.userId, userId)));
 
-	async (c) => {
-		const db = getDatabase();
-		const { id } = c.req.valid("param");
-		const userId = c.get("userId");
+    if (!result.rowCount) {
+      return c.json({ message: "Not found" }, 404);
+    }
 
-		const result = await db
-			.delete(todos)
-			.where(and(eq(todos.id, Number(id)), eq(todos.userId, userId)));
-
-		if (!result.rowCount) {
-			return c.json({ message: "Not found" }, 404);
-		}
-
-		return c.json({
-			message: "Deleted successfully",
-		});
-	}
+    return c.json({ message: "Deleted successfully" });
+  }
 );
 
 /* ================= OPENAPI ================= */
 
 app.get(
-	"/openapi",
-
-	openAPIRouteHandler(app, {
-		documentation: {
-			info: {
-				title: "Todo API",
-				version: "1.0.0",
-				description: "Hono + Zod + OpenAPI + Scalar",
-			},
-			servers: [{ url: "http://localhost:3000" }],
-		},
-	})
+  "/openapi",
+  openAPIRouteHandler(app, {
+    documentation: {
+      info: {
+        title: "Todo API",
+        version: "1.0.0",
+      },
+      servers: [
+        { url: "https://maestro-done-server.vercel.app/api" },
+      ],
+    },
+  })
 );
 
 /* ================= DOCS ================= */
 
 app.get(
-	"/docs",
-
-	Scalar({
-		url: "/api/openapi",
-	})
+  "/docs",
+  Scalar({
+    url: "/api/openapi",
+  })
 );
 
 export default handle(app);

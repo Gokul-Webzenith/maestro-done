@@ -10,42 +10,43 @@ const AUTH_SECRET = process.env.BETTER_AUTH_SECRET;
 const APP_URL = process.env.APP_URL;
 
 if (!AUTH_SECRET) {
-	throw new Error("❌ BETTER_AUTH_SECRET is missing.");
+  throw new Error("❌ BETTER_AUTH_SECRET is missing.");
 }
 
 if (!APP_URL) {
-	throw new Error("❌ APP_URL is missing.");
+  throw new Error("❌ APP_URL is missing.");
 }
 
 export const auth = betterAuth({
-	plugins: [expo()],
-	database: drizzleAdapter(db, {
-		provider: "pg",
-		schema: {
-			user,
-			session,
-			account,
-		},
-	}),
+  plugins: [expo()],
+  database: drizzleAdapter(db, {
+    provider: "pg",
+    schema: {
+      user,
+      session,
+      account,
+    },
+  }),
 
-	trustedOrigins: [
-		"http://localhost:3001",
-		"coolapp://",
-		"exp://",
-		"http://192.168.1.18:3000",
-		"http://localhost:3000",
-	],
+  trustedOrigins: [
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "http://192.168.1.18:3000",
+    "https://maestro-frontned-web.vercel.app", // ✅ IMPORTANT
+    "coolapp://",
+    "exp://",
+  ],
 
-	secret: AUTH_SECRET,
-	baseURL: APP_URL,
+  secret: AUTH_SECRET,
+  baseURL: APP_URL, // must be backend url + /api
 
-	emailAndPassword: {
-		enabled: true,
-	},
+  emailAndPassword: {
+    enabled: true,
+  },
 
-	cookies: {
-		sameSite: "none", // 🔴 REQUIRED
-		secure: false,
-		path: "/",
-	},
+  cookies: {
+    sameSite: "none",
+    secure: true, // ✅ MUST BE TRUE ON VERCEL
+    path: "/",
+  },
 });
