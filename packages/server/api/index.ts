@@ -1,12 +1,11 @@
-import { serve } from "@hono/node-server";
-import { getDb, todos, user } from "@repo/db";
+import { handle } from "@hono/node-server/vercel";
+import { getDb, todos } from "@repo/db";
 import { patchTodoSchema, todoFormSchema } from "@repo/schemas";
 import { Scalar } from "@scalar/hono-api-reference";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
-import {handle} from "@hono/node-server/vercel"
 import { describeRoute, openAPIRouteHandler, validator } from "hono-openapi";
 import { z } from "zod";
 import { auth } from "../auth.js";
@@ -14,11 +13,11 @@ import { auth } from "../auth.js";
 let db: ReturnType<typeof getDb>;
 
 function getDatabase() {
-  if (!db) {
-    db = getDb();
-    console.log("Database connected");
-  }
-  return db;
+	if (!db) {
+		db = getDb();
+		console.log("Database connected");
+	}
+	return db;
 }
 interface Variables {
 	userId: string;
@@ -70,7 +69,6 @@ app.use("*", async (c, next) => {
 
 	await next();
 });
-
 
 /* -------- GET TODOS -------- */
 
@@ -268,5 +266,4 @@ app.get(
 	})
 );
 
-
-export default handle (app);
+export default handle(app);
