@@ -45,9 +45,11 @@ export const auth = betterAuth({
 		enabled: true,
 	},
 
-	cookies: {
-		sameSite: "none",
-		secure: true, // ✅ MUST BE TRUE ON VERCEL
-		path: "/",
+	advanced: {
+		defaultCookieAttributes: {
+			sameSite: "none",
+			secure: true,
+			partitioned: true, // 🔥 THIS IS MISSING
+		},
 	},
 });

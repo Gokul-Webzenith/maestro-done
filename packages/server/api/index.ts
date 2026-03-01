@@ -53,7 +53,7 @@ app.options("*", (c) => c.body(null, 204));
 
 app.all("/auth/*", async (c) => {
 	const response = await auth.handler(c.req.raw);
-	return response; // ✅ MUST RETURN
+	return response;
 });
 
 /* ================= AUTH MIDDLEWARE ================= */
