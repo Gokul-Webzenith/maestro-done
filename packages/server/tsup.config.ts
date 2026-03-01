@@ -1,16 +1,20 @@
-import { defineConfig } from "tsup";
+import { defineConfig } from 'tsup'
 
 export default defineConfig({
-  entry: ["src/index.ts"],
-  format: ["esm"],
-  target: "node20",
-  platform: "node",
+  entry: ['api/index.ts'],
+  format: ['esm'],
+  target: 'node18',
 
-  outDir: "dist",
+  outDir: 'dist',
   clean: true,
+  sourcemap: false,
 
   splitting: false,
   bundle: true,
 
-  noExternal: ["@repo/db", "@repo/schemas"], // 🔥 VERY IMPORTANT
-});
+  // Bundle all workspace packages
+  noExternal: ['@repo/db', '@repo/schemas'],
+
+  // Native deps only
+  external: ['pg'],
+})

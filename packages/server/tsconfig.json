@@ -1,25 +1,22 @@
 {
   "compilerOptions": {
     "target": "es2022",
-    "module": "es2015",
-    "moduleResolution": "Bundler",
-
+    "module": "esnext",
+    "moduleResolution": "bundler",
     "strict": true,
+    "verbatimModuleSyntax": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
     "types": ["node"],
-
     "jsx": "react-jsx",
     "jsxImportSource": "hono/jsx",
-
     "outDir": "dist",
 
     "baseUrl": ".",
     "paths": {
-      "@repo/db": ["../packages/db/src"],
-      "@repo/schemas": ["../packages/schemas/src"] 
+      "@repo/db": ["../packages/db/src"]
     }
   },
-  "include": ["src", "api"],
+  "include": ["api", "api"],
   "exclude": ["node_modules"]
 }

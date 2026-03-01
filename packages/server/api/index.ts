@@ -9,7 +9,7 @@ import { logger } from "hono/logger";
 import {handle} from "@hono/node-server/vercel"
 import { describeRoute, openAPIRouteHandler, validator } from "hono-openapi";
 import { z } from "zod";
-import { auth } from "./../auth.js";
+import { auth } from "../auth.js";
 
 let db: ReturnType<typeof getDb>;
 
