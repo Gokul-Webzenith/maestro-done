@@ -47,12 +47,30 @@ app.use(
 	})
 );
 
-app.options("*", (c) => c.body(null, 204));
+app.options("*", (c) => {
+	c.header(
+		"Access-Control-Allow-Origin",
+		"https://maestro-frontned-web.vercel.app"
+	);
+	c.header("Access-Control-Allow-Credentials", "true");
+	c.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+	c.header("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
+	return c.body(null, 204);
+});
 
 /* ================= AUTH ROUTES (FIXED) ================= */
 
-app.all("/auth/*", (c) => {
-	return auth.handler(c.req.raw);
+app.all("/auth/*", async (c) => {
+	const res = await auth.handler(c.req.raw);
+
+	// Attach CORS headers manually
+	res.headers.set(
+		"Access-Control-Allow-Origin",
+		"https://maestro-frontned-web.vercel.app"
+	);
+	res.headers.set("Access-Control-Allow-Credentials", "true");
+
+	return res;
 });
 
 /* ================= AUTH MIDDLEWARE ================= */
@@ -64,27 +82,19 @@ app.use("*", async (c, next) => {
 		return next();
 	}
 
-	let session = await auth.api.getSession({
-		headers: c.req.raw.headers,
+	const headers = new Headers();
+	c.req.raw.headers.forEach((value, key) => {
+		headers.set(key, value);
 	});
 
-	// 2️⃣ If no cookie session, try Bearer token (Mobile)
-	if (!session?.user) {
-		const authHeader = c.req.header("Authorization");
-		if (authHeader?.startsWith("Bearer ")) {
-			const token = authHeader.replace("Bearer ", "");
-			session = await auth.api.getSession({
-				headers: new Headers({
-					Authorization: `Bearer ${token}`,
-				}),
-			});
-		}
-	}
+	const session = await auth.api.getSession({ headers });
 
 	if (!session?.user) {
-		return c.json({ message: "Unauthorized" }, 401);
+		return c.json({ message: "Login required" }, 401);
 	}
+
 	c.set("userId", session.user.id);
+
 	await next();
 });
 
