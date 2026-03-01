@@ -1,18 +1,16 @@
 import { defineConfig } from "tsup";
 
 export default defineConfig({
-	entry: ["src/index.ts"],
+  entry: ["src/index.ts"],
+  format: ["esm"],
+  target: "node20",
+  platform: "node",
 
-	format: ["esm"],
-	target: "node20",
+  outDir: "dist",
+  clean: true,
 
-	platform: "node", // 🔴 THIS IS IMPORTANT
+  splitting: false,
+  bundle: true,
 
-	outDir: "dist",
-	clean: true,
-
-	splitting: false,
-	bundle: true,
-
-	external: ["pg"],
+  noExternal: ["@repo/db", "@repo/schemas"], // 🔥 VERY IMPORTANT
 });

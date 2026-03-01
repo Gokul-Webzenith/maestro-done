@@ -17,7 +17,7 @@
     "baseUrl": ".",
     "paths": {
       "@repo/db": ["../packages/db/src"],
-      "@repo/schemas": ["../packages/schemas/src"] // 👈 add this
+      "@repo/schemas": ["../packages/schemas/src"] 
     }
   },
   "include": ["src", "api"],
