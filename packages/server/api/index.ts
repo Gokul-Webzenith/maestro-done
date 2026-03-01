@@ -38,7 +38,8 @@ app.use(
       "http://localhost:3001",
       "http://localhost:5173",
       "http://192.168.1.18:3000",
-      "https://maestro-frontned-web.vercel.app", // ✅ PRODUCTION FRONTEND
+      "https://maestro-frontned-web.vercel.app",
+      "https://maestro-done-baclend-web.vercel.app" // ✅ PRODUCTION FRONTEND
     ],
     credentials: true,
     allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
