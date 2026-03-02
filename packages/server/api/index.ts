@@ -95,7 +95,7 @@ app.use("*", async (c, next) => {
 
 	c.set("userId", session.user.id);
 
-	await next();
+	return next();
 });
 
 app.get("/test-db", async (c) => {
