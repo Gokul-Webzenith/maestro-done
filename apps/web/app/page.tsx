@@ -88,7 +88,12 @@ export default function AuthPage() {
 			}, 1500); // show message for 1.5s
 		} catch (err: unknown) {
 			console.error("AUTH ERROR:", err);
-			setMessage(err?.message || "Authentication failed");
+
+			if (err instanceof Error) {
+				setMessage(err.message);
+			} else {
+				setMessage("Authentication failed");
+			}
 		}
 	}
 
