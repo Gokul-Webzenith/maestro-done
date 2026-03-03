@@ -47,18 +47,6 @@ export default function AppSidebar() {
 							</Link>
 						</SidebarMenuButton>
 					</SidebarMenuItem>
-
-					{/* ✅ ADMIN LINK */}
-					{user?.role === "admin" && (
-						<SidebarMenuItem>
-							<SidebarMenuButton asChild>
-								<Link href="/admin">
-									<Shield className="mr-2 h-4 w-4" />
-									Admin
-								</Link>
-							</SidebarMenuButton>
-						</SidebarMenuItem>
-					)}
 				</SidebarMenu>
 			</SidebarGroup>
 		</SidebarContent>
