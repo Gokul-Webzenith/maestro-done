@@ -85,7 +85,6 @@ app.use("*", async (c, next) => {
 	}
 
 	try {
-		/* Forward request headers to auth system */
 		const headers = new Headers();
 
 		c.req.raw.headers.forEach((value, key) => {
