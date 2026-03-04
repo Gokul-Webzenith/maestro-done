@@ -74,12 +74,10 @@ app.use("*", async (c, next) => {
 
 	/* Public routes that should bypass auth */
 	if (
-		path.startsWith("/auth") ||
-		path === "/openapi" ||
-		path === "/docs" ||
-		path === "/test-db"
+		path.startsWith("/api/auth") ||
+		path === "/api/openapi" ||
+		path === "/api/docs"
 	) {
-		console.log("⏭ Skipping Auth for public route");
 		return next();
 	}
 
